@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import me.lucko.spark.paper.api.Compatibility;
-import me.lucko.spark.paper.api.PaperClassLookup;
 import me.lucko.spark.paper.api.PaperScheduler;
 import me.lucko.spark.paper.api.PaperSparkModule;
 import net.kyori.adventure.text.Component;
@@ -21,6 +20,7 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.CraftServer;
+import org.jetbrains.annotations.NotNull;
 
 // It's like electricity.
 public final class SparksFly {
@@ -62,27 +62,21 @@ public final class SparksFly {
                     }
                 };
             }
-        }, new PaperClassLookup() {
-            @Override
-            public Class<?> lookup(final String className) throws Exception {
-                final ExceptionCollector<ClassNotFoundException> exceptions = new ExceptionCollector<>();
-                try {
-                    return Class.forName(className);
-                } catch (final ClassNotFoundException e) {
-                    exceptions.add(e);
-                    for (final ConfiguredPluginClassLoader loader : ((PaperPluginClassLoaderStorage) PaperClassLoaderStorage.instance()).getGlobalGroup().getClassLoaders()) {
-                        try {
-                            final Class<?> loadedClass = loader.loadClass(className, true, false, true);
-                            if (loadedClass != null) {
-                                return loadedClass;
-                            }
-                        } catch (final ClassNotFoundException exception) {
-                            exceptions.add(exception);
-                        }
+        }, className -> {
+            final ExceptionCollector<ClassNotFoundException> exceptions = new ExceptionCollector<>();
+            try {
+                return Class.forName(className);
+            } catch (final ClassNotFoundException e) {
+                exceptions.add(e);
+                for (final ConfiguredPluginClassLoader loader : ((PaperPluginClassLoaderStorage) PaperClassLoaderStorage.instance()).getGlobalGroup().getClassLoaders()) {
+                    try {
+                        return loader.loadClass(className, true, false, true);
+                    } catch (final ClassNotFoundException exception) {
+                        exceptions.add(exception);
                     }
-                    exceptions.throwIfPresent();
-                    return null;
                 }
+                exceptions.throwIfPresent();
+                return null;
             }
         });
     }
@@ -189,7 +183,7 @@ public final class SparksFly {
         }
 
         @Override
-        public boolean execute(final CommandSender sender, final String commandLabel, final String[] args) {
+        public boolean execute(final CommandSender sender, final @NotNull String commandLabel, final String @NotNull [] args) {
             final SparksFly spark = ((CraftServer) sender.getServer()).spark;
             if (spark.enabled) {
                 spark.executeCommand(sender, args);
@@ -200,7 +194,7 @@ public final class SparksFly {
         }
 
         @Override
-        public List<String> tabComplete(final CommandSender sender, final String alias, final String[] args) throws IllegalArgumentException {
+        public @NotNull List<String> tabComplete(final CommandSender sender, final @NotNull String alias, final String @NotNull [] args) throws IllegalArgumentException {
             final SparksFly spark = ((CraftServer) sender.getServer()).spark;
             if (spark.enabled) {
                 return spark.tabComplete(sender, args);

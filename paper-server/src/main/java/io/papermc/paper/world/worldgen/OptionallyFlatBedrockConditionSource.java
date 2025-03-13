@@ -26,14 +26,12 @@ public record OptionallyFlatBedrockConditionSource(ResourceLocation randomName, 
         Registries.MATERIAL_CONDITION,
         ResourceLocation.fromNamespaceAndPath(ResourceLocation.PAPER_NAMESPACE, "optionally_flat_bedrock_condition_source")
     );
-    private static final KeyDispatchDataCodec<OptionallyFlatBedrockConditionSource> CODEC = KeyDispatchDataCodec.of(RecordCodecBuilder.mapCodec((instance) -> {
-        return instance.group(
-            ResourceLocation.CODEC.fieldOf("random_name").forGetter(OptionallyFlatBedrockConditionSource::randomName),
-            VerticalAnchor.CODEC.fieldOf("true_at_and_below").forGetter(OptionallyFlatBedrockConditionSource::trueAtAndBelow),
-            VerticalAnchor.CODEC.fieldOf("false_at_and_above").forGetter(OptionallyFlatBedrockConditionSource::falseAtAndAbove),
-            Codec.BOOL.fieldOf("is_roof").forGetter(OptionallyFlatBedrockConditionSource::isRoof)
-        ).apply(instance, OptionallyFlatBedrockConditionSource::new);
-    }));
+    private static final KeyDispatchDataCodec<OptionallyFlatBedrockConditionSource> CODEC = KeyDispatchDataCodec.of(RecordCodecBuilder.mapCodec((instance) -> instance.group(
+        ResourceLocation.CODEC.fieldOf("random_name").forGetter(OptionallyFlatBedrockConditionSource::randomName),
+        VerticalAnchor.CODEC.fieldOf("true_at_and_below").forGetter(OptionallyFlatBedrockConditionSource::trueAtAndBelow),
+        VerticalAnchor.CODEC.fieldOf("false_at_and_above").forGetter(OptionallyFlatBedrockConditionSource::falseAtAndAbove),
+        Codec.BOOL.fieldOf("is_roof").forGetter(OptionallyFlatBedrockConditionSource::isRoof)
+    ).apply(instance, OptionallyFlatBedrockConditionSource::new)));
 
     public static void bootstrap() {
         Registry.register(BuiltInRegistries.MATERIAL_CONDITION, CODEC_RESOURCE_KEY, CODEC.codec());

@@ -10,11 +10,10 @@ import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import org.bukkit.FeatureFlag;
 import org.bukkit.craftbukkit.entity.CraftEntityType;
-import org.bukkit.craftbukkit.entity.CraftEntityTypes;
 import org.bukkit.craftbukkit.potion.CraftPotionType;
-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.entity.EntityType;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 
 public class PaperFeatureFlagProviderImpl implements FeatureFlagProvider {
 
@@ -26,7 +25,7 @@ public class PaperFeatureFlagProviderImpl implements FeatureFlagProvider {
     );
 
     @Override
-    public Set<FeatureFlag> requiredFeatures(final FeatureDependant dependant) {
+    public @NotNull Set<FeatureFlag> requiredFeatures(final @NotNull FeatureDependant dependant) {
         final FeatureFlagSet requiredFeatures = getFeatureElement(dependant).requiredFeatures();
         return fromNms(requiredFeatures);
     }

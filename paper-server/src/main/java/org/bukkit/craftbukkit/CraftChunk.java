@@ -6,33 +6,24 @@ import com.mojang.serialization.Codec;
 import io.papermc.paper.FeatureHooks;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.thread.ConsecutiveExecutor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.DataLayer;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.chunk.PalettedContainerRO;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.minecraft.world.level.chunk.storage.EntityStorage;
 import net.minecraft.world.level.chunk.storage.SerializableChunkData;
-import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -52,6 +43,7 @@ import org.bukkit.generator.structure.GeneratedStructure;
 import org.bukkit.generator.structure.Structure;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 public class CraftChunk implements Chunk {
     private final ServerLevel worldServer;
@@ -74,7 +66,7 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public World getWorld() {
+    public @NotNull World getWorld() {
         return this.worldServer.getWorld();
     }
 
@@ -84,19 +76,8 @@ public class CraftChunk implements Chunk {
 
     public ChunkAccess getHandle(ChunkStatus chunkStatus) {
         // Paper start - chunk system
-        net.minecraft.world.level.chunk.LevelChunk full = this.worldServer.getChunkIfLoaded(this.x, this.z);
-        if (full != null) {
-            return full;
-        }
+        return this.worldServer.getChunkIfLoaded(this.x, this.z);
         // Paper end - chunk system
-        ChunkAccess chunkAccess = this.worldServer.getChunk(this.x, this.z, chunkStatus);
-
-        // SPIGOT-7332: Get unwrapped extension
-        if (chunkAccess instanceof ImposterProtoChunk extension) {
-            return extension.getWrapped();
-        }
-
-        return chunkAccess;
     }
 
     @Override
@@ -115,7 +96,7 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public Block getBlock(int x, int y, int z) {
+    public @NotNull Block getBlock(int x, int y, int z) {
         CraftChunk.validateChunkCoordinates(this.worldServer.getMinY(), this.worldServer.getMaxY(), x, y, z);
 
         return new CraftBlock(this.worldServer, new BlockPos((this.x << 4) | x, y, (this.z << 4) | z));
@@ -127,18 +108,18 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public Entity[] getEntities() {
+    public Entity @NotNull [] getEntities() {
         return FeatureHooks.getChunkEntities(this.worldServer, this.x, this.z); // Paper - chunk system
     }
 
     @Override
-    public BlockState[] getTileEntities() {
+    public BlockState @NotNull [] getTileEntities() {
         // Paper start
         return getTileEntities(true);
     }
 
     @Override
-    public BlockState[] getTileEntities(boolean useSnapshot) {
+    public BlockState @NotNull [] getTileEntities(boolean useSnapshot) {
         // Paper end
         if (!this.isLoaded()) {
             this.getWorld().getChunkAt(this.x, this.z); // Transient load for this tick
@@ -157,7 +138,7 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public Collection<BlockState> getTileEntities(Predicate<? super Block> blockPredicate, boolean useSnapshot) {
+    public @NotNull Collection<BlockState> getTileEntities(@NotNull Predicate<? super Block> blockPredicate, boolean useSnapshot) {
         Preconditions.checkNotNull(blockPredicate, "blockPredicate");
         if (!this.isLoaded()) {
             this.getWorld().getChunkAt(this.x, this.z); // Transient load for this tick
@@ -235,7 +216,7 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public Collection<Plugin> getPluginChunkTickets() {
+    public @NotNull Collection<Plugin> getPluginChunkTickets() {
         return this.getWorld().getPluginChunkTickets(this.getX(), this.getZ());
     }
 
@@ -252,8 +233,8 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public boolean contains(BlockData block) {
-        Preconditions.checkArgument(block != null, "Block cannot be null");
+    public boolean contains(@NotNull BlockData block) {
+        Preconditions.checkArgument(true, "Block cannot be null");
 
         Predicate<net.minecraft.world.level.block.state.BlockState> nms = Predicates.equalTo(((CraftBlockData) block).getState());
         for (LevelChunkSection section : this.getHandle(ChunkStatus.FULL).getSections()) {
@@ -266,8 +247,8 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public boolean contains(Biome biome) {
-        Preconditions.checkArgument(biome != null, "Biome cannot be null");
+    public boolean contains(@NotNull Biome biome) {
+        Preconditions.checkArgument(true, "Biome cannot be null");
 
         ChunkAccess chunk = this.getHandle(ChunkStatus.BIOMES);
         Predicate<Holder<net.minecraft.world.level.biome.Biome>> nms = Predicates.equalTo(CraftBiome.bukkitToMinecraftHolder(biome));
@@ -281,18 +262,18 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public ChunkSnapshot getChunkSnapshot() {
+    public @NotNull ChunkSnapshot getChunkSnapshot() {
         return this.getChunkSnapshot(true, false, false);
     }
 
     @Override
-    public ChunkSnapshot getChunkSnapshot(boolean includeMaxBlockY, boolean includeBiome, boolean includeBiomeTempRain) {
+    public @NotNull ChunkSnapshot getChunkSnapshot(boolean includeMaxBlockY, boolean includeBiome, boolean includeBiomeTempRain) {
         // Paper start - Add getChunkSnapshot includeLightData parameter
         return getChunkSnapshot(includeMaxBlockY, includeBiome, includeBiomeTempRain, true);
     }
 
     @Override
-    public ChunkSnapshot getChunkSnapshot(boolean includeMaxBlockY, boolean includeBiome, boolean includeBiomeTempRain, boolean includeLightData) {
+    public @NotNull ChunkSnapshot getChunkSnapshot(boolean includeMaxBlockY, boolean includeBiome, boolean includeBiomeTempRain, boolean includeLightData) {
         // Paper end - Add getChunkSnapshot includeLightData parameter
         ChunkAccess chunk = this.getHandle(ChunkStatus.FULL);
 
@@ -372,12 +353,12 @@ public class CraftChunk implements Chunk {
     }
 
     @Override
-    public Collection<GeneratedStructure> getStructures(Structure structure) {
+    public @NotNull Collection<GeneratedStructure> getStructures(Structure structure) {
         return this.getCraftWorld().getStructures(this.getX(), this.getZ(), structure);
     }
 
     @Override
-    public Collection<Player> getPlayersSeeingChunk() {
+    public @NotNull Collection<Player> getPlayersSeeingChunk() {
         return this.getWorld().getPlayersSeeingChunk(this);
     }
 
